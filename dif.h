@@ -1,13 +1,11 @@
 #ifndef _t33nsy_DIF
 #define _t33nsy_DIF
-#include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/glm.hpp>
 #include <iostream>
-
+#include <vector>
 struct Context {
-    double mass;
-    glm::dvec3 pos1, pos2, pos3, pos4;
-    double m1, m2, m3, m4;
+    std::vector<double> masses;
 };
 
 struct RigidBody {
@@ -16,5 +14,6 @@ struct RigidBody {
     glm::dvec3 f;
 };
 
-double step(RigidBody &rb, const Context &ctx, double h, double cur_time);
+double step(std::vector<RigidBody>& rb, int num, double h, double cur_time,
+            Context c);
 #endif /* _t33nsy_DIF */

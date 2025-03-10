@@ -1,43 +1,38 @@
 #include "render.h"
 
 double OldTime = -1, DeltaTime;
-RigidBody rb;
+std::vector<RigidBody> rb(4);
 Context context;
 double cameraAngle = 0.0f;
 double cameraPitch = 0.0f;
-double cameraDistance = 1.0f;
+double cameraDistance = 100.0f;
+#define SIZE 1e6
 // Create new frame in memory and draw it in window
-void Display() {
-    // clear frame
+void Display() {  // Очистка экрана и буфера глубины
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
+    // Настройка камеры
+    // float cameraX = cameraDistance * cos(cameraPitch * M_PI / 180.0f) *
+    //                 sin(cameraAngle * M_PI / 180.0f);
+    // float cameraY = cameraDistance * sin(cameraPitch * M_PI / 180.0f);
+    // float cameraZ = cameraDistance * cos(cameraPitch * M_PI / 180.0f) *
+    //                 cos(cameraAngle * M_PI / 180.0f);
 
-    float cameraX = cameraDistance * cos(cameraPitch * M_PI / 180.0f) *
-                    sin(cameraAngle * M_PI / 180.0f);
-    float cameraY = cameraDistance * sin(cameraPitch * M_PI / 180.0f);
-    float cameraZ = cameraDistance * cos(cameraPitch * M_PI / 180.0f) *
-                    cos(cameraAngle * M_PI / 180.0f);
+    gluLookAt(1e11, 1e11, 1e11,  // Позиция камеры
+              0, 0, 0,           // Точка, на которую смотрим
+              0, 1, 1);          // Направление "вверх"
 
-    // Устанавливаем камеру
-    gluLookAt(cameraX, cameraY, cameraZ,  // Позиция камеры
-              0, 0, 0,                    // Точка, на которую смотрим
-              0, 1, 0);                   // Направление "вверх"
-    step(rb, context, DeltaTime, OldTime);
-    // put buffer from memory to screen
+    // Обновление состояния
+    step(rb, 4, DeltaTime, OldTime, context);
+    std::cout << "ASTEROID: (" << rb[0].r.x << ", " << rb[0].r.y << ", "
+              << rb[0].r.z << ")\n";
 
-    glPushMatrix();
-    glTranslated(rb.r.x, rb.r.y, rb.r.z);
-    // glRotated(0, 0, 0, 0);
-    glColor3f(1, 0.0f, 0.0f);
-    DrawSomething(0.01);
-    glPopMatrix();
+    DrawStatic(rb[0].r, SIZE);
+    DrawStatic(rb[1].r, SIZE);
+    DrawStatic(rb[2].r, SIZE);
+    DrawStatic(rb[3].r, SIZE);
 
-    DrawStatic(context.pos1, 0.015);
-    DrawStatic(context.pos2, 0.015);
-    DrawStatic(context.pos3, 0.015);
-    DrawStatic(context.pos4, 0.015);
-    DrawStatic(rb.r, 0.005);
-
+    // Обновление экрана
     glFlush();
     glutSwapBuffers();
 }
@@ -46,7 +41,7 @@ void DrawStatic(const glm::vec3& pos, double size) {
     glPushMatrix();
     glColor3f(0.0f, 0.0f, 0.0f);
     glTranslated(pos.x, pos.y, pos.z);
-    DrawSomething(size);
+    glutWireSphere(size, 20, 20);
     glPopMatrix();
 }
 
@@ -128,22 +123,21 @@ void Keyboard(unsigned char Key, int MouseX, int MouseY) {
 }
 
 void Run(int argc, char* argv[]) {
-    context.m1 = 300000000000;
-    context.m2 = 300000000000;
-    context.m3 = 300000000000;
-    context.m4 = 300000000000;
-    context.pos1 = {0.15, 0, 0};
-    context.pos2 = {0.3, 0, 0};
-    context.pos3 = {0.2, 0.15, 0};
-    context.pos4 = {0.15, 0.15, 0};
-    context.mass = 330000000000;
+    context.masses.resize(4);
+    context.masses[0] = 1e12;
+    context.masses[1] = 5.972e24;
+    context.masses[2] = 1.898e27;
+    context.masses[3] = 5.683e26;
 
-    rb.r = {0, 0, 0};
-    rb.v = {0, 0, 0};
-
+    rb[0] = {glm::dvec3(0, 0, 0), glm::dvec3(0, 30000, 0), glm::dvec3(0, 0, 0)};
+    rb[1] = {glm::dvec3(1.496e11, 0, 0), glm::dvec3(0, 29780, 0),
+             glm::dvec3(0, 0, 0)};
+    rb[2] = {glm::dvec3(7.785e11, 0, 0), glm::dvec3(0, 13070, 0),
+             glm::dvec3(0, 0, 0)};
+    rb[3] = {glm::dvec3(1.429e12, 0, 0), glm::dvec3(0, 9690, 0),
+             glm::dvec3(0, 0, 0)};
     // initialization
     glutInit(&argc, argv);
-
     // Request double buffered true color window with Z-buffer
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     // Set size of window
@@ -154,7 +148,7 @@ void Run(int argc, char* argv[]) {
     glutCreateWindow("lab1");
 
     // Fill background color
-    glClearColor(0.3, 0.5, 0.7, 0);
+    glClearColor(0.1, 0.5, 0.7, 0);
 
     // Set functions for GLUT loop
     glutReshapeFunc(Reshape);
