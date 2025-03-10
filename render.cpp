@@ -6,7 +6,8 @@ Context context;
 double cameraAngle = 0.0f;
 double cameraPitch = 0.0f;
 double cameraDistance = 100.0f;
-#define SIZE 1e6
+#define SIZE 0.1
+int fl = 0;
 // Create new frame in memory and draw it in window
 void Display() {  // Очистка экрана и буфера глубины
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -18,19 +19,41 @@ void Display() {  // Очистка экрана и буфера глубины
     // float cameraZ = cameraDistance * cos(cameraPitch * M_PI / 180.0f) *
     //                 cos(cameraAngle * M_PI / 180.0f);
 
-    gluLookAt(1e11, 1e11, 1e11,  // Позиция камеры
-              0, 0, 0,           // Точка, на которую смотрим
-              0, 1, 1);          // Направление "вверх"
+    gluLookAt(rb[0].r.x-5, rb[0].r.y-5, rb[0].r.z-5,  // Позиция камеры
+              rb[0].r.x, rb[0].r.y, rb[0].r.z,           // Точка, на которую смотрим
+              0, -1, 0);          // Направление "вверх"
 
     // Обновление состояния
     step(rb, 4, DeltaTime, OldTime, context);
-    std::cout << "ASTEROID: (" << rb[0].r.x << ", " << rb[0].r.y << ", "
-              << rb[0].r.z << ")\n";
+    if (fl < 30){
+        std::cout << "SUN: (" << rb[0].r.x << ", " << rb[0].r.y << ", "
+        << rb[0].r.z << ")\n";
+        std::cout << "p1: (" << rb[1].r.x << ", " << rb[1].r.y << ", "
+        << rb[1].r.z << ")\n";
+        std::cout << "p2: (" << rb[2].r.x << ", " << rb[2].r.y << ", "
+        << rb[2].r.z << ")\n";
+        std::cout << "p3: (" << rb[3].r.x << ", " << rb[3].r.y << ", "
+        << rb[3].r.z << ")\n";
+    }
+    ++fl;
 
-    DrawStatic(rb[0].r, SIZE);
-    DrawStatic(rb[1].r, SIZE);
-    DrawStatic(rb[2].r, SIZE);
-    DrawStatic(rb[3].r, SIZE);
+    glPushMatrix();
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glTranslated(rb[0].r.x, rb[0].r.y, rb[0].r.z);
+    glutWireSphere(SIZE, 20, 20);
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(rb[1].r.x, rb[1].r.y, rb[1].r.z);
+    glutWireSphere(SIZE, 20, 20);
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(rb[2].r.x, rb[2].r.y, rb[2].r.z);
+    glutWireSphere(SIZE, 20, 20);
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(rb[3].r.x, rb[3].r.y, rb[3].r.z);
+    glutWireSphere(SIZE, 20, 20);
+    glPopMatrix();
 
     // Обновление экрана
     glFlush();
@@ -124,17 +147,17 @@ void Keyboard(unsigned char Key, int MouseX, int MouseY) {
 
 void Run(int argc, char* argv[]) {
     context.masses.resize(4);
-    context.masses[0] = 1e12;
-    context.masses[1] = 5.972e24;
-    context.masses[2] = 1.898e27;
-    context.masses[3] = 5.683e26;
+    context.masses[0] = 1.989e30;
+    context.masses[1] = 3.301e24;
+    context.masses[2] = 4.867e23;
+    context.masses[3] = 5.972e24;
 
-    rb[0] = {glm::dvec3(0, 0, 0), glm::dvec3(0, 30000, 0), glm::dvec3(0, 0, 0)};
-    rb[1] = {glm::dvec3(1.496e11, 0, 0), glm::dvec3(0, 29780, 0),
+    rb[0] = {glm::dvec3(0, 0.03, 0.01), glm::dvec3(0, 0, 0), glm::dvec3(0, 0, 0)};
+    rb[1] = {glm::dvec3(0.39, 0.03, 0), glm::dvec3(0, 6, 0),
              glm::dvec3(0, 0, 0)};
-    rb[2] = {glm::dvec3(7.785e11, 0, 0), glm::dvec3(0, 13070, 0),
+    rb[2] = {glm::dvec3(0.72, 0, 0), glm::dvec3(0, 10, 0),
              glm::dvec3(0, 0, 0)};
-    rb[3] = {glm::dvec3(1.429e12, 0, 0), glm::dvec3(0, 9690, 0),
+    rb[3] = {glm::dvec3(1, 0, 0), glm::dvec3(0, 8, 0),
              glm::dvec3(0, 0, 0)};
     // initialization
     glutInit(&argc, argv);
