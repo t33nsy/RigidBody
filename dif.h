@@ -12,6 +12,7 @@ struct RigidBody {
     glm::dvec3 r;
     glm::dvec3 v;
     glm::dvec3 f;
+    glm::quat q;
 };
 
 double step(std::vector<RigidBody>& rb, int num, double h, double cur_time,
