@@ -1,13 +1,18 @@
 #include "render.h"
 
+#define SIZE 0.07
+#define NUM 3
+#define DELIM 1e5
+#define POLY 10
 double OldTime = -1, DeltaTime;
 std::vector<RigidBody> rb(4);
 Context context;
 double cameraAngle = 0.0f;
 double cameraPitch = 0.0f;
 double cameraDistance = 100.0f;
-#define SIZE 0.1
+glm::dvec3 cameradist = {-2.5, -2.5, -2.5};
 int fl = 0;
+
 // Create new frame in memory and draw it in window
 void Display() {  // Очистка экрана и буфера глубины
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -19,41 +24,25 @@ void Display() {  // Очистка экрана и буфера глубины
     // float cameraZ = cameraDistance * cos(cameraPitch * M_PI / 180.0f) *
     //                 cos(cameraAngle * M_PI / 180.0f);
 
-    gluLookAt(rb[0].r.x-5, rb[0].r.y-5, rb[0].r.z-5,  // Позиция камеры
-              rb[0].r.x, rb[0].r.y, rb[0].r.z,           // Точка, на которую смотрим
-              0, -1, 0);          // Направление "вверх"
+    gluLookAt(rb[0].r.x + cameradist.x, rb[0].r.y + cameradist.y,
+              rb[0].r.z + cameradist.z,         // Позиция камеры
+              rb[0].r.x, rb[0].r.y, rb[0].r.z,  // Точка, на которую смотрим
+              0, -1, 0);                        // Направление "вверх"
 
     // Обновление состояния
-    step(rb, 4, DeltaTime, OldTime, context);
-    if (fl < 30){
-        std::cout << "SUN: (" << rb[0].r.x << ", " << rb[0].r.y << ", "
-        << rb[0].r.z << ")\n";
-        std::cout << "p1: (" << rb[1].r.x << ", " << rb[1].r.y << ", "
-        << rb[1].r.z << ")\n";
-        std::cout << "p2: (" << rb[2].r.x << ", " << rb[2].r.y << ", "
-        << rb[2].r.z << ")\n";
-        std::cout << "p3: (" << rb[3].r.x << ", " << rb[3].r.y << ", "
-        << rb[3].r.z << ")\n";
+    step(rb, NUM, DeltaTime, OldTime, context);
+
+    for (int i = 0; i < NUM; ++i) {
+        if (fl % 30)
+            std::cout << i << ": (" << rb[i].r.x << ", " << rb[i].r.y << ", "
+                      << rb[i].r.z << ")\n";
+        glPushMatrix();
+        glColor3f(0.0f, 0.0f, 0.0f);
+        glTranslated(rb[i].r.x / DELIM, rb[i].r.y / DELIM, rb[i].r.z / DELIM);
+        glutWireSphere(SIZE, POLY, POLY);
+        glPopMatrix();
     }
     ++fl;
-
-    glPushMatrix();
-    glColor3f(0.0f, 0.0f, 0.0f);
-    glTranslated(rb[0].r.x, rb[0].r.y, rb[0].r.z);
-    glutWireSphere(SIZE, 20, 20);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslated(rb[1].r.x, rb[1].r.y, rb[1].r.z);
-    glutWireSphere(SIZE, 20, 20);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslated(rb[2].r.x, rb[2].r.y, rb[2].r.z);
-    glutWireSphere(SIZE, 20, 20);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslated(rb[3].r.x, rb[3].r.y, rb[3].r.z);
-    glutWireSphere(SIZE, 20, 20);
-    glPopMatrix();
 
     // Обновление экрана
     glFlush();
@@ -146,19 +135,31 @@ void Keyboard(unsigned char Key, int MouseX, int MouseY) {
 }
 
 void Run(int argc, char* argv[]) {
-    context.masses.resize(4);
+    context.masses.resize(NUM);
     context.masses[0] = 1.989e30;
-    context.masses[1] = 3.301e24;
-    context.masses[2] = 4.867e23;
-    context.masses[3] = 5.972e24;
+    context.masses[1] = 3.3e23;
+    context.masses[2] = 2.4478e16;
+    // context.masses[0] = 1;
+    // context.masses[1] = 1.6601e-7;
+    // context.masses[2] = 2.4478e-6;
+    // context.masses[3] = 3.0035e-6;
 
-    rb[0] = {glm::dvec3(0, 0.03, 0.01), glm::dvec3(0, 0, 0), glm::dvec3(0, 0, 0)};
-    rb[1] = {glm::dvec3(0.39, 0.03, 0), glm::dvec3(0, 6, 0),
-             glm::dvec3(0, 0, 0)};
-    rb[2] = {glm::dvec3(0.72, 0, 0), glm::dvec3(0, 10, 0),
-             glm::dvec3(0, 0, 0)};
-    rb[3] = {glm::dvec3(1, 0, 0), glm::dvec3(0, 8, 0),
-             glm::dvec3(0, 0, 0)};
+    rb[0] = {glm::dvec3(0, 0, 0), glm::dvec3(0, 0, 0), glm::dvec3(0, 0, 0)};
+    rb[1] = {glm::dvec3(4.6e5, 8.89e4, 2.87e4),
+             glm::dvec3(-1.81e5, 4.97e6, 2.15e4), glm::dvec3(0, 0, 0)};
+    rb[2] = {glm::dvec3(-3.8235e5, 1.4067e4, -4.558e4),
+             glm::dvec3(4.79e5, -1.992e6, -6.1e5), glm::dvec3(0, 0, 0)};
+    // rb[1] = {glm::dvec3(0.3075, 0.05943, 0.01917),
+    //          glm::dvec3(-0.01048, 0.02877, 0.00124), glm::dvec3(0, 0, 0)};
+    // rb[2] = {glm::dvec3(-0.38235, -0.14067, -0.04558),
+    //          glm::dvec3(0.00479, -0.01992, -0.00061), glm::dvec3(0, 0, 0)};
+    // rb[3] = {glm::dvec3(-0.17455, 0.96737, 0),
+    //          glm::dvec3(-0.01742, -0.00312, 0), glm::dvec3(0, 0, 0)};
+
+    // for (int i = 0; i < NUM; ++i) {
+    //     context.masses[i] *= 1000;
+    //     rb[i].v *= 1000;
+    // }
     // initialization
     glutInit(&argc, argv);
     // Request double buffered true color window with Z-buffer
