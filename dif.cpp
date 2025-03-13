@@ -1,6 +1,4 @@
 #include "dif.h"
-#define G 6.67e-11
-// derivative f(X(t), t) = dX/dt in point t.
 
 glm::dvec3 force(const glm::dvec3& r1, const double m1, const glm::dvec3& r2,
                  const double m2, const double d) {
@@ -30,6 +28,7 @@ std::vector<RigidBody> f_rigidbody(const std::vector<RigidBody>& rb, int num,
         omega = R * c.Ibodies_inv[i] * glm::transpose(R) * rb[i].L;
         // q' = 0.5 * omega * q
         dt[i].q = 0.5 * glm::dquat(0, omega) * rb[i].q;
+        dt[i].q = glm::normalize(dt[i].q);
         glm::dvec3 force_sum(0, 0, 0);
         glm::dvec3 torq_sum(0, 0, 0);
         for (int j = 0; j < num; ++j) {
@@ -41,13 +40,10 @@ std::vector<RigidBody> f_rigidbody(const std::vector<RigidBody>& rb, int num,
         }
         // v' = F / m
         dt[i].P = force_sum / c.masses[i];
-        // L' = I * omega
+        // L' = tau
         dt[i].L = torq_sum;
-        // dt[i].L = R * c.Ibodies[i] * glm::transpose(R) * omega;
         tau_sum += dt[i].L;
     }
-    std::cout << "Angular momentum sum: (" << tau_sum[0] << ", " << tau_sum[1]
-              << ", " << tau_sum[2] << ")\n";
     return dt;
 }
 
