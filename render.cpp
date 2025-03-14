@@ -1,7 +1,7 @@
 #include "render.h"
 
 #define SIZE 0.07
-#define NUM 5
+#define NUM 2
 #define DELIM 1e5
 #define RADIUS_DELIM 1e7
 #define POLY 10
@@ -34,7 +34,7 @@ double computeKineticEnergy(const std::vector<RigidBody>& rb) {
 double computePotentialEnergy(const std::vector<RigidBody>& rb) {
     double potential_energy = 0.0;
 
-    for (size_t i = 0; i < rb.size(); ++i) {
+    for (size_t i = 0; i < rb.size() - 1; ++i) {
         for (size_t j = i + 1; j < rb.size(); ++j) {
             double distance = glm::distance(rb[i].r, rb[j].r);
             potential_energy -=
@@ -89,9 +89,14 @@ void Display() {  // Очистка экрана и буфера глубины
     barycenter = temp_barycenter / total_mass;
     ++fl;
     if (fl % 200 == 0) {
+        std::cout << "Bary: " << barycenter.x << ", " << barycenter.y << ", "
+                  << barycenter.z << "\n";
+        // std::cout << barycenter.x * barycenter.x + barycenter.y * barycenter.y +
+        //                  barycenter.z * barycenter.z
+        //           << "\n";
         bary << barycenter.x << ", " << barycenter.y << ", " << barycenter.z
              << "\n";
-        energy << computeTotalEnergy(rb) / 1e39 << "\n";
+        std::cout << computeTotalEnergy(rb) / 1e39 << "\n";
     }
 
     glFlush();
@@ -103,7 +108,7 @@ void Idle() {
     long Time;
     if (OldTime == -1) OldTime = clock();
     Time = clock();
-    DeltaTime = (double)(Time - OldTime) / CLOCKS_PER_SEC / 1000;
+    DeltaTime = (double)(Time - OldTime) / CLOCKS_PER_SEC / 100;
     OldTime = Time;
 
     // redraw frame
@@ -132,18 +137,18 @@ void Keyboard(unsigned char Key, int MouseX, int MouseY) {
 void Run(int argc, char* argv[]) {
     contextReserve(context, NUM);
     // Массы (в кг)
-    context.masses[0] = 1.989e30;   // Звезда (Солнце)
-    context.masses[1] = 3.3e23;     // Меркурий
-    context.masses[2] = 2.4478e16;  // Астероид
-    context.masses[3] = 4.867e24;   // Венера
-    context.masses[4] = 5.972e24;   // Земля
+    context.masses[0] = 1.989e30;  // Звезда (Солнце)
+    context.masses[1] = 3.3e23;    // Меркурий
+    // context.masses[2] = 2.4478e16;  // Астероид
+    // context.masses[3] = 4.867e24;   // Венера
+    // context.masses[4] = 5.972e24;   // Земля
 
     // Радиусы (в метрах)
     context.radiuses[0] = 1.957e6;   // Радиус звезды (Солнце)
     context.radiuses[1] = 1.4397e6;  // Радиус Меркурия
-    context.radiuses[2] = 1.0e6;     // Радиус астероида
-    context.radiuses[3] = 1.0518e6;  // Радиус Венеры
-    context.radiuses[4] = 1.371e6;   // Радиус Земли
+    // context.radiuses[2] = 1.0e6;     // Радиус астероида
+    // context.radiuses[3] = 1.0518e6;  // Радиус Венеры
+    // context.radiuses[4] = 1.371e6;   // Радиус Земли
 
     // Положение, импульс, кватернион и момент импульса для каждого тела
     rb[0].r = glm::dvec3(0, 0, 0);  // Звезда в центре
@@ -159,23 +164,23 @@ void Run(int argc, char* argv[]) {
     rb[1].L = glm::dvec3(0, 1e4, 0);
     // // Момент импульса Меркурия
 
-    rb[2].r = glm::dvec3(-3.8235e5, 1.4067e4, -4.558e4);  // Положение астероида
-    rb[2].P = glm::dvec3(4.79e5, -1.992e6, 6.1e6);        // Импульс астероида
-    rb[2].q =
-        glm::angleAxis(glm::radians(60.0), glm::dvec3(1, 0, 0));  // Астероид
-    rb[2].L = glm::dvec3(1e3, 0, 0);  // Момент импульса астероида
+    // rb[2].r = glm::dvec3(-3.8235e5, 1.4067e4, -4.558e4);  // Положение
+    // астероида rb[2].P = glm::dvec3(4.79e5, -1.992e6, 6.1e6);        //
+    // Импульс астероида rb[2].q =
+    //     glm::angleAxis(glm::radians(60.0), glm::dvec3(1, 0, 0));  // Астероид
+    // rb[2].L = glm::dvec3(1e3, 0, 0);  // Момент импульса астероида
 
-    rb[3].r = glm::dvec3(1.08e6, 0, 0);  // Положение Венеры
-    rb[3].P = glm::dvec3(0, 3.5e6, 0);   // Импульс Венеры
-    rb[3].q =
-        glm::angleAxis(glm::radians(90.0), glm::dvec3(0, 0, 1));  // Венера
-    rb[3].L = glm::dvec3(0, 0, 2e4);  // Момент импульса Венеры
+    // rb[3].r = glm::dvec3(1.08e6, 0, 0);  // Положение Венеры
+    // rb[3].P = glm::dvec3(0, 3.5e6, 0);   // Импульс Венеры
+    // rb[3].q =
+    //     glm::angleAxis(glm::radians(90.0), glm::dvec3(0, 0, 1));  // Венера
+    // rb[3].L = glm::dvec3(0, 0, 2e4);  // Момент импульса Венеры
 
-    rb[4].r = glm::dvec3(1.496e6, 0, 0);  // Положение Земли
-    rb[4].P = glm::dvec3(0, 2.98e6, 0);   // Импульс Земли
-    rb[4].q =
-        glm::angleAxis(glm::radians(120.0), glm::dvec3(0, 1, 0));  // Земля
-    rb[4].L = glm::dvec3(0, 3e4, 0);  // Момент импульса Земли
+    // rb[4].r = glm::dvec3(1.496e6, 0, 0);  // Положение Земли
+    // rb[4].P = glm::dvec3(0, 2.98e6, 0);   // Импульс Земли
+    // rb[4].q =
+    //     glm::angleAxis(glm::radians(120.0), glm::dvec3(0, 1, 0));  // Земля
+    // rb[4].L = glm::dvec3(0, 3e4, 0);  // Момент импульса Земли
 
     // compute barycenter in t0
     glm::dvec3 temp_barycenter = glm::dvec3(0, 0, 0);

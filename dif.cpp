@@ -142,9 +142,9 @@ double step(std::vector<RigidBody>& rb, int num, double h, double cur_time,
         rb[i] = rb[i] + (k1[i] + k2[i] * 2 + k3[i] * 2 + k4[i]) * (h / 6.0);
     }
 
-    glm::dvec3 temp = rb[0].r;
-    for (int i = 0; i < num; ++i) {
-        rb[i].r -= temp;
-    }
+    // glm::dvec3 temp = rb[0].r;
+    // for (int i = 0; i < num; ++i) {
+    //     rb[i].r -= temp;
+    // }
     return 0.0;
 }
