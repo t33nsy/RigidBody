@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
-#define G 6.67e-11
+#define G 0.0000000000667
 
 /***
  * структура контекста
@@ -47,7 +47,7 @@ std::vector<RigidBody> f_rigidbody(const std::vector<RigidBody>& rb, int num,
  * @param d расстояние между телами
  */
 glm::dvec3 force(const glm::dvec3& r1, const double m1, const glm::dvec3& r2,
-                 const double m2, const double d);
+                 const double m2);
 
 /***
  * Сумма составляющих двух тел

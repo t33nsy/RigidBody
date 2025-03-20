@@ -2,15 +2,15 @@
 
 #define SIZE 0.07
 #define NUM 2
-#define DELIM 1e5
-#define RADIUS_DELIM 1e7
+#define DELIM 1
+#define RADIUS_DELIM 1
 #define POLY 10
 double OldTime = -1, DeltaTime, total_mass = 0;
 std::vector<RigidBody> rb(NUM);
-__uint128_t fl = 1;
+__uint128_t fl = 0;
 Context context;
 glm::dvec3 barycenter(0, 0, 0);
-glm::dvec3 cameradist = {-2, -2, -2};
+glm::dvec3 cameradist = {0, 5, 0};
 std::ofstream bary("bary.csv");
 std::ofstream energy("energy.csv");
 
@@ -51,15 +51,22 @@ double computeTotalEnergy(const std::vector<RigidBody>& rb) {
     return kinetic + potential;
 }
 
+double test(const std::vector<RigidBody>& rb) {
+    glm::dvec3 delta = rb[0].r - rb[1].r;
+    double dist = glm::length(delta);
+    double centr = context.masses[1] * glm::dot(rb[1].P, rb[1].P) / dist;
+    double force = G * context.masses[0] * context.masses[1] / (dist * dist);
+    return centr - force;
+}
+
 void Display() {  // Очистка экрана и буфера глубины
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
-    gluLookAt(rb[0].r.x + cameradist.x, rb[0].r.y + cameradist.y,
-              rb[0].r.z + cameradist.z,  // Позиция камеры
-              rb[0].r.x, rb[0].r.y,
-              rb[0].r.z,  // Точка, на которую смотрим
-              0, 1, 0);   // Направление "вверх"
+    gluLookAt(cameradist.x, cameradist.y,
+              cameradist.z,  // Позиция камеры
+              0, 0, 0,       // Точка, на которую смотрим
+              1, 0, 0);     // Направление "вверх"
 
     // Обновление состояния
     step(rb, NUM, DeltaTime, OldTime, context);
@@ -91,12 +98,15 @@ void Display() {  // Очистка экрана и буфера глубины
     if (fl % 200 == 0) {
         std::cout << "Bary: " << barycenter.x << ", " << barycenter.y << ", "
                   << barycenter.z << "\n";
-        // std::cout << barycenter.x * barycenter.x + barycenter.y * barycenter.y +
+        std::cout << "Invariant: " << test(rb) << "\n";
+        // std::cout << barycenter.x * barycenter.x + barycenter.y *
+        // barycenter.y +
         //                  barycenter.z * barycenter.z
         //           << "\n";
         bary << barycenter.x << ", " << barycenter.y << ", " << barycenter.z
              << "\n";
-        std::cout << computeTotalEnergy(rb) / 1e39 << "\n";
+        std::cout << computeTotalEnergy(rb) << "\n";
+        // std::cout << "mu^2/r" =
     }
 
     glFlush();
@@ -108,7 +118,7 @@ void Idle() {
     long Time;
     if (OldTime == -1) OldTime = clock();
     Time = clock();
-    DeltaTime = (double)(Time - OldTime) / CLOCKS_PER_SEC / 100;
+    DeltaTime = (double)(Time - OldTime) / CLOCKS_PER_SEC / 10;
     OldTime = Time;
 
     // redraw frame
@@ -136,32 +146,47 @@ void Keyboard(unsigned char Key, int MouseX, int MouseY) {
 
 void Run(int argc, char* argv[]) {
     contextReserve(context, NUM);
+    context.masses[0] = 100000000000;
+    context.masses[1] = 1;
     // Массы (в кг)
-    context.masses[0] = 1.989e30;  // Звезда (Солнце)
-    context.masses[1] = 3.3e23;    // Меркурий
+    // context.masses[0] = 1.989e30;  // Звезда (Солнце)
+    // context.masses[1] = 3.3e23;    // Меркурий
     // context.masses[2] = 2.4478e16;  // Астероид
     // context.masses[3] = 4.867e24;   // Венера
     // context.masses[4] = 5.972e24;   // Земля
 
+    context.radiuses[0] = 0.5;
+    context.radiuses[1] = 0.3;
     // Радиусы (в метрах)
-    context.radiuses[0] = 1.957e6;   // Радиус звезды (Солнце)
-    context.radiuses[1] = 1.4397e6;  // Радиус Меркурия
+    // context.radiuses[0] = 1.957e6;   // Радиус звезды (Солнце)
+    // context.radiuses[1] = 1.4397e6;  // Радиус Меркурия
     // context.radiuses[2] = 1.0e6;     // Радиус астероида
     // context.radiuses[3] = 1.0518e6;  // Радиус Венеры
     // context.radiuses[4] = 1.371e6;   // Радиус Земли
 
-    // Положение, импульс, кватернион и момент импульса для каждого тела
-    rb[0].r = glm::dvec3(0, 0, 0);  // Звезда в центре
-    rb[0].P = glm::dvec3(0, 0, 0);  // Нет начального импульса
-    rb[0].q =
-        glm::angleAxis(glm::radians(45.0), glm::dvec3(0, 0, 1));  // Звезда
-    rb[0].L = glm::dvec3(0, 0, 1e5);  // Момент импульса звезды
+    rb[0].r = glm::dvec3(0, 0, 0);
+    rb[0].P = glm::dvec3(0, 0, 0);
+    rb[0].q = glm::angleAxis(glm::radians(0.0), glm::dvec3(0, 0, 0));
+    rb[0].L = glm::dvec3(0, 0, 0);
 
-    rb[1].r = glm::dvec3(4.6e5, 8.89e4, 2.87e4);    // Положение Меркурия
-    rb[1].P = glm::dvec3(-1.81e5, 4.97e6, 2.15e4);  // Импульс Меркурия
-    rb[1].q =
-        glm::angleAxis(glm::radians(30.0), glm::dvec3(0, 1, 0));  // Меркурий
-    rb[1].L = glm::dvec3(0, 1e4, 0);
+    // 6.67/2.3 = 2.9
+    rb[1].r = glm::dvec3(2.3, 0, 0);
+    rb[1].P = glm::dvec3(0, 0, sqrt(2.9));
+    rb[1].q = glm::angleAxis(glm::radians(0.0), glm::dvec3(0, 0, 0));
+    rb[1].L = glm::dvec3(0, 0, 0);
+    test(rb);
+    // Положение, импульс, кватернион и момент импульса для каждого тела
+    // rb[0].r = glm::dvec3(0, 0, 0);  // Звезда в центре
+    // rb[0].P = glm::dvec3(0, 0, 0);  // Нет начального импульса
+    // rb[0].q =
+    //     glm::angleAxis(glm::radians(45.0), glm::dvec3(0, 0, 1));  // Звезда
+    // rb[0].L = glm::dvec3(0, 0, 1e5);  // Момент импульса звезды
+
+    // rb[1].r = glm::dvec3(4.6e5, 8.89e4, 2.87e4);    // Положение Меркурия
+    // rb[1].P = glm::dvec3(-1.81e5, 4.97e6, 2.15e4);  // Импульс Меркурия
+    // rb[1].q =
+    //     glm::angleAxis(glm::radians(30.0), glm::dvec3(0, 1, 0));  // Меркурий
+    // rb[1].L = glm::dvec3(0, 1e4, 0);
     // // Момент импульса Меркурия
 
     // rb[2].r = glm::dvec3(-3.8235e5, 1.4067e4, -4.558e4);  // Положение

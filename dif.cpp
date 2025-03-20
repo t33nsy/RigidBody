@@ -1,24 +1,19 @@
 #include "dif.h"
 
 glm::dvec3 force(const glm::dvec3& r1, const double m1, const glm::dvec3& r2,
-                 const double m2, const double d) {
-    return G * m1 * m2 * (r2 - r1) / d;
+                 const double m2) {
+    glm::dvec3 delta = {r2.x - r1.x, r2.y - r1.y, r2.z - r1.z};
+    double r = glm::length(delta);
+    return G * m1 * m2 / (r * r * r) * delta;
 }
 
 std::vector<RigidBody> f_rigidbody(const std::vector<RigidBody>& rb, int num,
                                    double time, const Context& c) {
     std::vector<RigidBody> dt(num);
-    std::vector<std::vector<double>> distances(num, std::vector<double>(num));
+    // std::vector<double>(num));
     glm::dmat3x3 R;
     glm::dvec3 omega;
-    for (int i = 0; i < num; ++i) {
-        for (int j = 0; j < num; ++j) {
-            distances[i][j] = glm::distance(rb[i].r, rb[j].r);
-            distances[i][j] = std::max(distances[i][j], 1e-11);
-            distances[i][j] *= distances[i][j] * distances[i][j];
-        }
-    }
-    glm::dvec3 tau_sum(0, 0, 0);
+    // glm::dvec3 tau_sum(0, 0, 0);
     for (int i = 0; i < num; ++i) {
         // pos' = P
         dt[i].r = rb[i].P;
@@ -30,19 +25,20 @@ std::vector<RigidBody> f_rigidbody(const std::vector<RigidBody>& rb, int num,
         dt[i].q = 0.5 * glm::dquat(0, omega) * rb[i].q;
         dt[i].q = glm::normalize(dt[i].q);
         glm::dvec3 force_sum(0, 0, 0);
-        glm::dvec3 torq_sum(0, 0, 0);
+        // glm::dvec3 torq_sum(0, 0, 0);
         for (int j = 0; j < num; ++j) {
             if (j == i) continue;
-            glm::dvec3 t = force(rb[i].r, c.masses[i], rb[j].r, c.masses[j],
-                                 distances[i][j]);
+            glm::dvec3 t = force(rb[i].r, c.masses[i], rb[j].r, c.masses[j]);
             force_sum += t;
-            torq_sum += glm::cross(rb[i].r - rb[j].r, t);
+            // torq_sum += glm::cross(rb[i].r - rb[j].r, t);
         }
         // v' = F / m
         dt[i].P = force_sum / c.masses[i];
+        // std::cout << dt[i].P.x << " " << dt[i].P.y << " " << dt[i].P.z
+        //           << std::endl;
         // L' = tau
-        dt[i].L = torq_sum;
-        tau_sum += dt[i].L;
+        dt[i].L = {0, 0, 0};
+        // tau_sum += dt[i].L;
     }
     return dt;
 }
